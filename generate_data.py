@@ -1,3 +1,11 @@
+"""
+  generate_data.py      :   This file contains the Knapsack class for creating random weight-value vectors and
+                            writing it to json files.
+  File created by       :   Shashank Goyal
+  Last commit done by   :   Shashank Goyal
+  Last commit date      :   30th October 2020
+"""
+
 # json module used to store and load the knapsack objects in json files
 import json
 # choice method to select an objects from a list of objects
@@ -9,19 +17,23 @@ import numpy as np
 
 class Knapsack:
     """Class to represent and store Knapsack Problem Object.
+
     Attributes: 
         n       (int)                   : number of items in the knapsack.
         weights (np.ndarray or list)    : contains the weights vector.
         values  (np.ndarray or list)    : contains the  corresponding value vector.
         capacity (int)                  : capacity value of the knapsack.
+
     """
 
     def __init__(self, n: int, upper_seed: int = 51, json_fname: str = None):
         """Initialization for Class.
+
         Args:
             n           : number of items in the knapsack.
             upper_seed  : used as the upper limit on the range while generating the values.
             json_fname  : name of the file to load the knapsack object from.
+
         """
 
         # if file name is specified
@@ -51,6 +63,7 @@ class Knapsack:
 
     def __repr__(self):
         """Implementation of `repr` dunder method.
+
         Returns:
             str: String representation of the class attributes.
         """
@@ -68,30 +81,26 @@ class Knapsack:
 
 
 if __name__ == "__main__":
-    for items in [10,15,20,25,30]:
-        # number of items
-        no_of_items = items
-        # upper seed
-        seed = 51
-        # path to save the file
-        fname = str(no_of_items) + '_valuesnew.json'
+    # number of items
+    no_of_items = 10
+    # upper seed
+    seed = 51
+    # path to save the file
+    fname = './values/' + str(no_of_items) + '_values.json'
 
-        # knapsack object
-        k = Knapsack(no_of_items, seed)
-        # display the contents of the knapsack object
-        #print(k)
-        print(k.__dict__)
-        print(type(k.__dict__))
-        print(k.__dict__['n'])
-        # create the file
-        with open(fname, 'w') as file:
-            # store the contents of the object in the file
-            json.dump(k.__dict__, file)
+    # knapsack object
+    k = Knapsack(no_of_items, seed)
+    # display the contents of the knapsack object
+    print(k)
 
-        # ========================== Sanity Check ========================== 
-        # load a new object with the contents of the file just created
-        k_load = Knapsack(no_of_items, json_fname=fname)
+    # create the file
+    with open(fname, 'w') as file:
+        # store the contents of the object in the file
+        json.dump(k.__dict__, file)
+
+    # ========================== Sanity Check ========================== 
+    # load a new object with the contents of the file just created
+    k_load = Knapsack(no_of_items, json_fname=fname)
     # display the contents of this loaded knapsack object
-    #print(k_load)
-    #print("Sanity Check Complete")
-    #print(k_load.weights)
+    print(k_load)
+    print("Sanity Check Complete")

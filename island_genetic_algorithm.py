@@ -1,20 +1,40 @@
+"""
+  island_genetic_algorithm.py :   This file contains the island implementation of Genetic Algorithm.
+  File created by             :   Shashank Goyal
+  Last commit done by         :   Shashank Goyal
+  Last commit date            :   30th October 2020
+"""
+
+# ThreadPoolExecutor and as_completed to run routines in parallel and get the result when it completes
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import pickle 
+import time
+"""
+Note: 	Here, the ThreadPoolExecutor is used and not ProcessPoolExecutor because 
+        we can not use any objects that is not picklable and using the later
+        results in pickling error.
+"""
+
+# numpy module for using genetic operations
 import numpy as np
 # tqdm module for progress bar
 from tqdm import tqdm
 
 # import knapsack object
-from gen_data import Knapsack
-from standard_ga import GeneticAlgorithm
-import pickle
-import time
+from generate_data import Knapsack
+# import the GeneticAlgorithm class to be inherited
+from standard_genetic_algorithm import GeneticAlgorithm
+
 
 def get_genome_sequence(code: int, padding: int):
     """
     This method is used to convert a base-10 number to its
     base-2 representation as an array.
+
     Args:
         code (int)      : It is the base-10 number to be converted.
         padding (int)   : It is the length of the array representation.
+
     Examples:
         >>> get_genome_sequence(7,2)
         array([1, 1, 1])
@@ -24,6 +44,7 @@ def get_genome_sequence(code: int, padding: int):
         array([0, 1, 1, 1])
         >>> get_genome_sequence(7,5)
         array([0, 0, 1, 1, 1])
+
     Returns:
         np.ndarray  : Array containing 0s and 1s representing base-2 of the `code`.
     """
@@ -34,8 +55,10 @@ def get_genome_value(genome: np.ndarray):
     """
     This method converts a numpy array (of zeros and ones) from base-2
     to corresponding base-10 value.
+
     Args:
         genome (np.ndarray) : The array containing sequence of 0s and 1s.
+
     Examples:
         >>> get_genome_value(np.array([1,1,0]))
         6
@@ -45,6 +68,7 @@ def get_genome_value(genome: np.ndarray):
         4
         >>> get_genome_value(np.array([0,0,1,0,0]))
         4
+
     Returns:
         int : Base-10 value of the `genome` array.
     """
@@ -55,9 +79,11 @@ def fitness_func(code: int, knapsack_obj: Knapsack):
     """
     This method calculates the profit that can be achieved for a specific genome
     and returns it as the fitness of the genome.
+
     Args:
         code (int)               : It is the base-10 genome value.
         knapsack_obj (Knapsack)  : It is the object containing the vectors for the problem.
+
     Returns:
         int : Total profit value, if the weight load can be taken else `np.NINF`.
     """
@@ -73,15 +99,19 @@ def fitness_func(code: int, knapsack_obj: Knapsack):
 
 class IslandGeneticAlgorithm(GeneticAlgorithm):
     """Class to implement Island Genetic Algorithm.
+
     Attributes:
         inherited from super() class
+
     """
 
     def __init__(self, *args, **kwargs):
         """Initialization for Class.
+
         Args:
             *args       : Variable length argument list.
             **kwargs    : Arbitrary keyword arguments.
+
         """
         # set kwargs as super() attributes.
         super().__init__(*args, **kwargs)
@@ -90,10 +120,13 @@ class IslandGeneticAlgorithm(GeneticAlgorithm):
 
     def crossover_mutation(self, population: np.ndarray):
         """Generate the new generation after crossover and performs mutations.
+
         It is a combination of the `crossover` and `mutation` from the super class
         in order to make it easier to parallelize without too much branching.
+
         Args:
             population  : input population.
+
         Returns:
             np.ndarray  : initial population along with the new mutated generation.
         """
@@ -106,9 +139,11 @@ class IslandGeneticAlgorithm(GeneticAlgorithm):
 
     def driver(self, selection_percentage: float, k_parallel: int = 5):
         """The driver method for the Island Genetic Algorithm.
+
         Args:
             selection_percentage	: percentage of population allowed to move to next step.
             k_parallel    			: number of parallel sub genetic algorithms routines.
+
         Returns:
             int : genome value of the winner genome
         """
@@ -148,45 +183,35 @@ class IslandGeneticAlgorithm(GeneticAlgorithm):
         return best_genome
 
 
+
+    # load the knapsack object from the file
 if __name__ == "__main__":
-        # name of file to load contents from
-    time_all = []
-    reward_all = []
-    for item in [10,15,20,25,30]:
-        start_time = time.time()
-        fname = "./values1/{}_valuesnew.json".format(item)
-        print(fname)
-        # load the knapsack object from the file
-        knapsack_object = Knapsack(15, json_fname=fname)
-        # convert knapsack vectors to numpy arrays
-        knapsack_object.to_numpy()
-        # values for the genetic algorithm instance
-        genetic_algo_data = {
-            'cycle': 5,
-            'genome_size': knapsack_object.n,
-            'init_pop_size': knapsack_object.n ** 2,
-            'crossover_scheme': GeneticAlgorithm.UNIFORM_CROSSOVER,
-            'mutation_scheme': GeneticAlgorithm.BIT_FLIP_MUTATION,
-            'fitness_func': lambda genome: fitness_func(genome, knapsack_object),
-            'seed_range': (0, 2 ** knapsack_object.n - 1),
-            'encode': get_genome_value,
-            'decode': lambda genome: get_genome_sequence(genome, knapsack_object.n)
-        }
+    # name of file to load contents from
+    fname = "./values/15_values.json"
+    # load the knapsack object from the file
+    knapsack_object = Knapsack(15, json_fname=fname)
+    # convert knapsack vectors to numpy arrays
+    knapsack_object.to_numpy()
+    # values for the genetic algorithm instance
+    genetic_algo_data = {
+        'cycle': 20,
+        'genome_size': knapsack_object.n,
+        'init_pop_size': knapsack_object.n ** 2,
+        'crossover_scheme': GeneticAlgorithm.UNIFORM_CROSSOVER,
+        'mutation_scheme': GeneticAlgorithm.BIT_FLIP_MUTATION,
+        'fitness_func': lambda genome: fitness_func(genome, knapsack_object),
+        'seed_range': (0, 2 ** knapsack_object.n - 1),
+        'encode': get_genome_value,
+        'decode': lambda genome: get_genome_sequence(genome, knapsack_object.n)
+    }
 
-        # create an object
-        ga = IslandGeneticAlgorithm(**genetic_algo_data)
-        # run the driver method
-        winner_genome = ga.driver(knapsack_object.weights, int(knapsack_object.capacity * 0.75))
-        # print the results
-        print("Sequence: {}\nGenome Value: {}\nProfit: {}\nCapacity Used: {}".format
-            (get_genome_sequence(winner_genome, knapsack_object.n),
-            winner_genome,
-            fitness_func(winner_genome, knapsack_object),
-            np.dot(get_genome_sequence(winner_genome, knapsack_object.n), knapsack_object.weights)))
-        time_all.append(time.time()-start_time)
-        reward_all.append(fitness_func(winner_genome, knapsack_object))
-
-    with open("iga_search_time_new.txt", "wb") as fp:
-        pickle.dump(time_all, fp)
-    with open("iga_search_reward_new.txt", "wb") as fp:
-        pickle.dump(reward_all, fp)
+    # create an object
+    ga = IslandGeneticAlgorithm(**genetic_algo_data)
+    # run the driver method
+    winner_genome = ga.driver(0.05, 10)
+    # print the results
+    print("Sequence: {}\nGenome Value: {}\nProfit: {}\nCapacity Used: {}".format
+          (get_genome_sequence(winner_genome, knapsack_object.n),
+           winner_genome,
+           fitness_func(winner_genome, knapsack_object),
+           np.dot(get_genome_sequence(winner_genome, knapsack_object.n), knapsack_object.weights)))
